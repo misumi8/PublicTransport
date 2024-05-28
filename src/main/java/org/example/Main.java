@@ -1,13 +1,11 @@
 package org.example;
 
 import javafx.application.Application;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.VBox;
+import javafx.geometry.Rectangle2D;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.Button;
-import javafx.scene.layout.FlowPane;
+import org.example.Components.MainFrame;
 
 public class Main extends Application{
 
@@ -18,18 +16,14 @@ public class Main extends Application{
 
     @Override
     public void start(Stage stage) {
-
-        Label lbl = new Label("Hello");
-        Button btn = new Button("Click");
-
-        VBox root = new VBox();
-        root.getChildren().addAll(lbl, btn);
-
-        Scene scene = new Scene(root, 300, 200);
+        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+        Scene scene = new Scene(new MainFrame(screenBounds.getWidth(), screenBounds.getHeight()).getRoot());
         stage.setScene(scene);
-
-        stage.setTitle("Layout in JavaFX");
-
+        stage.setTitle("Public Transport v0.0");
+        stage.setX(screenBounds.getMinX());
+        stage.setY(screenBounds.getMinY());
+        stage.setWidth(screenBounds.getWidth());
+        stage.setHeight(screenBounds.getHeight());
         stage.show();
     }
 }
