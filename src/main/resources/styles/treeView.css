@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Poetsen+One&family=Space+Grotesk:wght@300..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+
+
+.tree-cell ImageView {
+    -fx-effect: dropshadow(gaussian, black, 0.8, 0.5, 0, 0);
+}
+
+.tree-cell .arrow {
+    -fx-background-color: transparent;
+    -fx-background-image: null;
+}
+
+.tree-cell:selected{
+    -fx-background-color: #D7D7D7;
+    -fx-text-fill: black;
+}
+
+.tree-cell {
+    -fx-padding: 6px 0;
+    /*-fx-translate-y: 20px;*/
+    -fx-font-weight: 500;
+    /*-fx-font-style: italic;*/
+    -fx-background-color: #DDDDDD;
+    -fx-font-family: "Ubuntu";
+    -fx-font-size: 17px;
+}
+
+
+.tree-view {
+    -fx-background-color: #DDDDDD;
+}
