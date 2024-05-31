@@ -6,13 +6,35 @@
 }
 
 .tree-cell .arrow {
+    -fx-background-image: url('/icons/icons8-plus-15.png');
+    -fx-effect: dropshadow(gaussian, black, 0.8, 0.5, 0, 0);
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
     -fx-background-color: transparent;
-    -fx-background-image: null;
+    -fx-padding: 7.5px;
+    -fx-translate-y: -1px;
+    -fx-shape: "M 10 10 H 90 V 90 H 10 L 10 10";
+}
+
+.tree-cell:expanded .arrow {
+    -fx-background-image: url('/icons/icons8-minus-15.png');
+    -fx-rotate: 0.5;
+    -fx-effect: dropshadow(gaussian, black, 0.8, 0.5, 0, 0);
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+    -fx-background-color: transparent;
+    -fx-padding: 7.5px;
+    -fx-translate-y: -1px;
+    -fx-shape: "M 10 10 H 90 V 90 H 10 L 10 10";
 }
 
 .tree-cell:selected{
     -fx-background-color: #D7D7D7;
     -fx-text-fill: black;
+}
+
+.text-field {
+    -fx-font-weight: 800;
 }
 
 .tree-cell {
@@ -22,7 +44,7 @@
     /*-fx-font-style: italic;*/
     -fx-background-color: #DDDDDD;
     -fx-font-family: "Ubuntu";
-    -fx-font-size: 17px;
+    -fx-font-size: 15px;
 }
 
 

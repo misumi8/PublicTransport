@@ -3,10 +3,7 @@ package org.example.DAOs;
 import org.example.ConnectionManager;
 import org.example.Entities.User;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,5 +35,24 @@ public class UsersDAO {
             System.out.println("NullPointerException: " + e);
         }
         return null;
+    }
+
+    public static long tryLogin(String username, String password) {
+        try {
+            Connection connection = ConnectionManager.getConnection();
+            CallableStatement callableStatement = connection.prepareCall("{ ? = call login(?,?) }");
+            callableStatement.registerOutParameter(1, Types.INTEGER);
+            callableStatement.setString(2, username);
+            callableStatement.setString(3, password);
+            callableStatement.execute();
+            long result = callableStatement.getLong(1);
+            callableStatement.close();
+            connection.close();
+            return result;
+        }
+        catch (SQLException e){
+            System.out.println("SQLException (tryLogin):" + e);
+        }
+        return -1;
     }
 }
