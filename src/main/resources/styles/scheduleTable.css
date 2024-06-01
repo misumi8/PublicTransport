@@ -1,0 +1,32 @@
+.table-view {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.table-view .table-cell {
+    -fx-alignment: center;
+}
+
+.table-view .column-header {
+    -fx-background-color: linear-gradient(to right, #1881de, #1a7edb);
+}
+
+.table-view .column-header .arrow {
+    -fx-background-color: #DDDDDD;
+}
+
+.table-row-cell:selected .table-cell {
+    -fx-background-color: #a1d3ff;
+    -fx-text-fill: black;
+}
+
+.table-view .table-column {
+    -fx-border-color: transparent; /* Делаем границы столбцов прозрачными */
+}
+
+.table-row-cell:odd{
+    -fx-background-color: #e3e5e8;
+}
+.table-row-cell:even{
+    -fx-background-color: #e8e8e8;
+}

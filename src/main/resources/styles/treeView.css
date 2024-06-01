@@ -1,8 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Poetsen+One&family=Space+Grotesk:wght@300..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
 
-
 .tree-cell ImageView {
     -fx-effect: dropshadow(gaussian, black, 0.8, 0.5, 0, 0);
+}
+
+.stationRouteImg {
+    -fx-effect: dropshadow(gaussian, black, 0.1, 0.1, 0, 0);
 }
 
 .tree-cell .arrow {
@@ -28,13 +31,17 @@
     -fx-shape: "M 10 10 H 90 V 90 H 10 L 10 10";
 }
 
-.tree-cell:selected{
-    -fx-background-color: #D7D7D7;
+.tree-cell:selected, .tree-cell:selected:hover{
+    -fx-background-color: linear-gradient(to right, #4397e0, #1a7edb);
     -fx-text-fill: black;
 }
 
 .text-field {
     -fx-font-weight: 800;
+}
+
+.tree-cell:hover {
+    -fx-background-color: #cfcfcf;
 }
 
 .tree-cell {
@@ -47,7 +54,13 @@
     -fx-font-size: 15px;
 }
 
-
 .tree-view {
     -fx-background-color: #DDDDDD;
+    -fx-border-color: linear-gradient(to bottom right, #1a7edb, #1672c7);
+    -fx-padding: 0;
+    -fx-border-width: 0 3px 0 0;
+}
+
+.tree-view:focused {
+    -fx-focus-color: transparent;
 }

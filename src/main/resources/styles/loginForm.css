@@ -1,0 +1,11 @@
+.root {
+    -fx-background-color: #DDDDDD;
+}
+
+.text-field {
+    -fx-background-color: white;
+}
+
+.button:pressed, .button:focused {
+    -fx-background-color: #ededed; /* Убирает цвет фона */
+}

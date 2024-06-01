@@ -9,9 +9,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.example.DAOs.UsersDAO;
 import org.example.Entities.User;
 
@@ -35,20 +38,24 @@ public class PasswordScene {
         TextField userField = new TextField(this.username);
         userField.setFocusTraversable(false);
         userField.setEditable(false);
+        userField.setPrefWidth(this.totalWidth * 0.09);
         Label passwordLabel = new Label("Password:");
         PasswordField passwordField = new PasswordField();
+        passwordField.setPrefWidth(this.totalWidth * 0.09);
         Button submitButton = new Button("Submit");
 
-        HBox hBoxUser = new HBox(10, userLabel, userField);
-        //hBoxUser.setPadding(new Insets(5, 0, 5, 0));
-        hBoxUser.setAlignment(Pos.CENTER);
+        VBox vBoxUser = new VBox(18, userLabel, passwordLabel);
+        vBoxUser.setAlignment(Pos.CENTER);
 
-        HBox hBoxPassword = new HBox(10, passwordLabel, passwordField);
-        //hBoxPassword.setPadding(new Insets(5, 0, 5, 0));
-        hBoxPassword.setAlignment(Pos.CENTER);
+        VBox vBoxPassword = new VBox(10, userField, passwordField);
+        vBoxPassword.setAlignment(Pos.CENTER);
 
-        VBox loginForm = new VBox(10);
-        loginForm.getChildren().addAll(hBoxUser, hBoxPassword, submitButton);
+        HBox userPassword = new HBox(10);
+        userPassword.getChildren().addAll(vBoxUser, vBoxPassword);
+        userPassword.setAlignment(Pos.CENTER);
+
+        VBox loginForm = new VBox(18);
+        loginForm.getChildren().addAll(userPassword, submitButton);
         loginForm.setAlignment(Pos.CENTER);
 
         submitButton.setOnAction(e -> {
@@ -63,14 +70,26 @@ public class PasswordScene {
             }
         });
 
-        loginForm.setStyle("-fx-background-color: #DDDDDD;");
+        loginForm.getStylesheets().add("styles/loginForm.css");
         Scene passwordScene = new Scene(loginForm);
-        passwordStage.initModality(Modality.APPLICATION_MODAL); // Blocks other windows interaction
+        // On enter press passwordButton:
+        passwordScene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                submitButton.fire();
+            }
+            else if (event.getCode() == KeyCode.ESCAPE){
+                passwordStage.close();
+            }
+        });
+        passwordStage.initModality(Modality.APPLICATION_MODAL); // Blocks interaction with other windows
         passwordStage.setScene(passwordScene);
         passwordStage.setHeight(totalHeight * 0.25);
         passwordStage.setWidth(totalWidth * 0.25);
         passwordStage.setResizable(false);
         passwordStage.setTitle("Login form");
+        passwordStage.getIcons().add(new Image("/icons/icons8-underground-100.png"));
+        passwordStage.initStyle(StageStyle.UNIFIED); // no
+
         passwordStage.showAndWait();
         passwordField.requestFocus();
 

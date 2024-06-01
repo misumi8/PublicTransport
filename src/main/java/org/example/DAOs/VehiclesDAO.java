@@ -14,8 +14,7 @@ import java.util.List;
 
 public class VehiclesDAO {
     public static List<Vehicle> getVehiclesOfDepot(Long depotId) {
-        try {
-            Connection connection = ConnectionManager.getConnection();
+        try(Connection connection = ConnectionManager.getConnection()){
             Statement statement = connection.createStatement();
             ResultSet result = statement.executeQuery("select * from vehicles d where d.depot_id = " + depotId);
             List<Vehicle> depotVehicles = new ArrayList<>();

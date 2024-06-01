@@ -1,0 +1,15 @@
+.menuButtons {
+    -fx-border-color: linear-gradient(to bottom right, #1a7edb, #1672c7);
+    -fx-padding: 0;
+    -fx-border-width: 0 3px 0 0;
+}
+
+.button {
+    -fx-background-color: #DDDDDD;
+    -fx-border-color: #D0D0D0;
+    -fx-border-width: 1px 1px 1px 1px;
+}
+
+/*.button.clicked {
+    -fx-background-color: #D3D3D3;
+}*/

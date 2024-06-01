@@ -13,8 +13,7 @@ import java.util.List;
 
 public class StationsDAO {
     public static List<Station> getStationsOfRoute(Long routeId) {
-        try {
-            Connection connection = ConnectionManager.getConnection();
+        try(Connection connection = ConnectionManager.getConnection()){
             Statement statement = connection.createStatement();
             ResultSet result = statement.executeQuery("select * from stations s where s.route_id = " + routeId);
             List<Station> stations = new ArrayList<>();

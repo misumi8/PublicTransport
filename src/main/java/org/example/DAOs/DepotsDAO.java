@@ -10,8 +10,7 @@ import java.util.List;
 
 public class DepotsDAO {
     public static List<Depot> getDepotsOfUser(String username){
-        try{
-            Connection connection = ConnectionManager.getConnection();
+        try(Connection connection = ConnectionManager.getConnection()){
             PreparedStatement userIdStatement = connection.prepareStatement("select id from users u where u.username = (?)");
             userIdStatement.setString(1, username);
             ResultSet userIdResult = userIdStatement.executeQuery();
@@ -42,8 +41,7 @@ public class DepotsDAO {
     }
 
     public static List<Depot> getDepotsOfUser(Long userId){
-        try{
-            Connection connection = ConnectionManager.getConnection();
+        try(Connection connection = ConnectionManager.getConnection()){
             Statement statement = connection.createStatement();
             ResultSet result = statement.executeQuery("select * from depots d where d.user_id = " + userId);
             List<Depot> userDepots = new ArrayList<>();
