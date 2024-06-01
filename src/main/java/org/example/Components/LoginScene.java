@@ -1,8 +1,5 @@
 package org.example.Components;
 
-import javafx.css.StyleClass;
-import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -16,17 +13,14 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.example.DAOs.UsersDAO;
-import org.example.Entities.User;
 
-import java.text.Format;
-
-public class PasswordScene {
+public class LoginScene {
     private long userId = -1L;
     private double totalWidth;
     private double totalHeight;
     private String username;
 
-    public PasswordScene(double totalWidth, double totalHeight, String username){
+    public LoginScene(double totalWidth, double totalHeight, String username){
         this.totalHeight = totalHeight;
         this.totalWidth = totalWidth;
         this.username = username;
@@ -90,6 +84,7 @@ public class PasswordScene {
         passwordStage.getIcons().add(new Image("/icons/icons8-underground-100.png"));
         passwordStage.initStyle(StageStyle.UNIFIED); // no
 
+        passwordStage.centerOnScreen();
         passwordStage.showAndWait();
         passwordField.requestFocus();
 

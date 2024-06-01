@@ -4,10 +4,7 @@ import org.example.ConnectionManager;
 import org.example.Entities.Depot;
 import org.example.Entities.Vehicle;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -29,6 +26,34 @@ public class VehiclesDAO {
             statement.close();
             connection.close();
             return depotVehicles;
+        } catch (SQLException e) {
+            System.out.println("SQLException (vehiclesDAO): " + e);
+        } catch (NullPointerException e) {
+            System.out.println("NullPointerException: " + e);
+        }
+        return null;
+    }
+
+    public static Vehicle getVehicle(String plate){
+        try(Connection connection = ConnectionManager.getConnection()){
+            PreparedStatement preparedStatement = connection.prepareStatement("select * from vehicles v where v.plate = ?");
+            preparedStatement.setString(1, plate);
+            ResultSet result = preparedStatement.executeQuery();
+            if(result.next()) {
+                Vehicle vehicle = new Vehicle(result.getLong("id"),
+                        result.getString("plate"),
+                        result.getDate("date_of_manufacture"),
+                        result.getLong("depot_id"),
+                        result.getLong("route_id"),
+                        result.getString("type"));
+                result.close();
+                preparedStatement.close();
+                connection.close();
+                return vehicle;
+            }
+            result.close();
+            preparedStatement.close();
+            connection.close();
         } catch (SQLException e) {
             System.out.println("SQLException (vehiclesDAO): " + e);
         } catch (NullPointerException e) {

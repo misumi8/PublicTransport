@@ -9,6 +9,7 @@ import java.time.LocalTime;
 public class Schedule {
     private Long depotId;
     private Long vehicleId;
+    private Long routeId;
     private LocalTime departureTime;
     private LocalTime arrivalTime;
 

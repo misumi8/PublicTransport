@@ -1,0 +1,42 @@
+.vehicleInfo {
+    -fx-background-color: #e8e8e8;
+}
+
+.image-view {
+    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.75), 40, 0.1, 2, 8);
+}
+
+.button {
+    -fx-background-color: linear-gradient(to right, #4c87ed, #3978e6);
+    -fx-font-size: 1.5em;
+    -fx-font-weight: 800;
+    -fx-text-fill: linear-gradient(to right, #e6e6e6, #f2f2f2);
+    /*-fx-font-style: italic;*/
+    -fx-border-color: linear-gradient(to bottom right, #1a7edb, #1672c7);
+    -fx-border: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+
+.button.pressed {
+    -fx-background-color: linear-gradient(to right, #4181f0, #2469e0);
+}
+
+.combo-box {
+    -fx-background-color: #DDDDDD;
+    -fx-border-color: #D0D0D0;
+    -fx-border: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.combo-box .list-cell:hover, .combo-box .list-cell:selected  {
+    -fx-background-color: #c9c9c9;
+    -fx-text-fill: black;
+}
+
+.text-field-default {
+    -fx-background-color: white;
+    -fx-border-color: #B0B0B0;
+    -fx-border-width: 1px;
+}

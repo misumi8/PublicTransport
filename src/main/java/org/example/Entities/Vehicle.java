@@ -8,6 +8,16 @@ public class Vehicle {
     private Date dateOfManufacture;
     private Long depotId;
     private Long routeId;
+    private String type;
+
+    public Vehicle(Long id, String plate, Date dateOfManufacture, Long depotId, Long routeId, String type) {
+        this.id = id;
+        this.plate = plate;
+        this.dateOfManufacture = dateOfManufacture;
+        this.depotId = depotId;
+        this.routeId = routeId;
+        this.type = type != null ? type : "";
+    }
 
     public Vehicle(Long id, String plate, Date dateOfManufacture, Long depotId, Long routeId) {
         this.id = id;
@@ -25,6 +35,14 @@ public class Vehicle {
     }
 
     public Vehicle() {}
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public Long getId() {
         return id;

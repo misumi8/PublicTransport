@@ -41,10 +41,10 @@ public class RegisterScene {
 
         Button registerButton = new Button("Register");
 
-        VBox vBoxUser = new VBox(18, userLabel, cityLabel, passwordLabel);
+        VBox vBoxUser = new VBox(18, userLabel, passwordLabel, cityLabel);
         vBoxUser.setAlignment(Pos.CENTER);
 
-        VBox vBoxPassword = new VBox(10, userField, cityField, passwordField);
+        VBox vBoxPassword = new VBox(10, userField, passwordField, cityField);
         vBoxPassword.setAlignment(Pos.CENTER);
 
         HBox userPassword = new HBox(10);
@@ -148,6 +148,7 @@ public class RegisterScene {
         passwordStage.getIcons().add(new Image("/icons/icons8-underground-100.png"));
         passwordStage.initStyle(StageStyle.UNIFIED); // no
 
+        passwordStage.centerOnScreen();
         passwordStage.showAndWait();
         passwordField.requestFocus();
 

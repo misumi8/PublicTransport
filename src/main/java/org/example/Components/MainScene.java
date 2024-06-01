@@ -1,30 +1,32 @@
 package org.example.Components;
 
-import com.sun.source.tree.Tree;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.Node;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import org.example.ConnectionManager;
 import org.example.DAOs.*;
 import org.example.Entities.*;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
 
 public class MainScene {
-    private BorderPane root;
-    private double width;
-    private double height;
-    private TreeItem<String> rootTreeNode;
+    private final BorderPane root;
+    private final double width;
+    private final double height;
+    private final TreeItem<String> rootTreeNode;
 
     public MainScene(double width, double height){
         this.root = new BorderPane();
@@ -110,6 +112,8 @@ public class MainScene {
             rootTreeNode.getChildren().add(userRoot);
         }
 
+
+        Set<String> vehicles = new HashSet<>();
         menuList.setOnMouseClicked(event -> {
             TreeItem<String> selectedItem = menuList.getSelectionModel().getSelectedItem();
             if(selectedItem != null && selectedItem.getValue() != null) {
@@ -117,8 +121,8 @@ public class MainScene {
                 if (!selectedItem.getValue().isEmpty() &&
                         usersMap.containsValue(selectedItem.getValue())) {
                     String username = selectedItem.getValue();
-                    PasswordScene passwordScene = new PasswordScene(this.width, this.height, username);
-                    long userId = passwordScene.loginForm();
+                    LoginScene loginScene = new LoginScene(this.width, this.height, username);
+                    long userId = loginScene.loginForm();
                     if (userId > -1) {
                         usersMap.remove(userId);
                         List<Depot> userDepots = DepotsDAO.getDepotsOfUser(username);
@@ -133,6 +137,7 @@ public class MainScene {
                             for (Vehicle vehicle : depotVehicles) {
                                 Image vehicleIcon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/icons8-trolleybus-21.png")));
                                 TreeItem<String> depotVehicle = new TreeItem<String>(vehicle.getPlate(), new ImageView(vehicleIcon));
+                                vehicles.add(depotVehicle.getValue());
                                 depotVehicle.setExpanded(true);
                                 userDepot.getChildren().add(depotVehicle); // temp
 
@@ -158,7 +163,7 @@ public class MainScene {
                         loggedUsers.add(selectedItem.getValue());
                     }
                 }
-                if(selectedItem.getValue().startsWith("Depot: ")){
+                else if(selectedItem.getValue().startsWith("Depot: ")){
                     Long depotId = Long.parseLong(selectedItem.getValue().substring(7));
                     System.out.println("|" + depotId + "|");
                     ObservableList<Schedule> schedules = FXCollections.observableList(Objects.requireNonNull(ScheduleDAO.getAllData(depotId)));
@@ -200,6 +205,236 @@ public class MainScene {
                     depotSchedule.setMaxWidth(this.width - menu.getWidth());
                     depotSchedule.setMaxHeight(this.height);
                     this.root.setCenter(depotSchedule);
+                }
+                else if(vehicles.contains(selectedItem.getValue())){
+                    System.out.println("YOU CLICKED A VEHICLE");
+                    Vehicle vehicle = VehiclesDAO.getVehicle(selectedItem.getValue());
+
+                    VBox vehicleInfo = new VBox(10);
+                    vehicleInfo.setAlignment(Pos.TOP_CENTER);
+                    vehicleInfo.getStylesheets().add("/styles/vehicleInfo.css");
+                    vehicleInfo.getStyleClass().add("vehicleInfo");
+
+                    // Image type:
+                    Vehicle selectedVehicle = VehiclesDAO.getVehicle(selectedItem.getValue());
+                    Image vehicleImg = null;
+                    if(selectedVehicle.getType().isEmpty()){
+                        vehicleImg = new Image("/icons/unknownType.png");
+                    }
+                    else if(selectedVehicle.getType().equals("BUS")) {
+                        vehicleImg = new Image("/icons/bus.png");
+                    }
+                    else if (selectedVehicle.getType().equals("TROLLEYBUS")){
+                        vehicleImg = new Image("/icons/trolleybus.png");
+                    }
+                    else if (selectedVehicle.getType().equals("TRAM")){
+                        vehicleImg = new Image("/icons/tram.png");
+                    }
+                    ImageView vehicleImageView = new ImageView(vehicleImg);
+                    vehicleImageView.setFitHeight((this.width - menu.getWidth()) * 0.45);
+                    vehicleImageView.setFitWidth((this.width - menu.getWidth()) * 0.85);
+
+                    // Vehicle Info:
+                    HBox vehicleModifiableInfo = new HBox(80);
+                    vehicleModifiableInfo.setAlignment(Pos.CENTER);
+                    vehicleModifiableInfo.setPadding(new Insets(55, 0, 0, 0));
+
+                    HBox idPlate = new HBox(50);
+                    idPlate.setAlignment(Pos.CENTER);
+
+                    VBox idPlateLabels = new VBox(22);
+                    idPlateLabels.getStyleClass().add("dataInfoType");
+                    Label id = new Label("ID:");
+                    id.setPadding(new Insets(2, 0,0,0));
+                    id.setAlignment(Pos.CENTER);
+                    Label plate = new Label("Plate:");
+                    plate.setAlignment(Pos.CENTER);
+                    id.setMaxWidth(Double.MAX_VALUE);
+                    plate.setMaxWidth(Double.MAX_VALUE);
+                    idPlateLabels.getChildren().addAll(id, plate);
+
+                    VBox idPlateFields = new VBox(10);
+                    TextField idField = new TextField(vehicle.getId() + "");
+                    TextField plateField = new TextField(selectedItem.getValue());
+                    idPlateFields.getChildren().addAll(idField, plateField);
+                    idPlate.getChildren().addAll(idPlateLabels, idPlateFields);
+                    //
+                    HBox dateType = new HBox(50);
+                    dateType.setAlignment(Pos.CENTER);
+
+                    VBox dateTypeLabels = new VBox(25);
+                    dateTypeLabels.getStyleClass().add("dataInfoType");
+                    Label date = new Label("Date of manufacture:");
+                    date.setPadding(new Insets(1,0,0,0));
+                    date.setAlignment(Pos.CENTER);
+                    Label type = new Label("Type:");
+                    type.setAlignment(Pos.CENTER);
+                    date.setMaxWidth(Double.MAX_VALUE);
+                    type.setMaxWidth(Double.MAX_VALUE);
+                    dateTypeLabels.getChildren().addAll(date, type);
+
+                    VBox dateTypeFields = new VBox(10);
+                    DatePicker dateField = new DatePicker();
+                                    // convert Date to LocalDate:
+                    dateField.setValue(Instant.ofEpochMilli(vehicle.getDateOfManufacture().getTime())
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate());
+                    ComboBox<String> typeComboBox = new ComboBox<>();
+                    typeComboBox.getItems().addAll("TROLLEYBUS", "TRAM", "BUS");
+                    typeComboBox.setValue(vehicle.getType().isEmpty() ? "NONE" : vehicle.getType());
+                    dateField.setPrefWidth(this.width * 0.1);
+                    typeComboBox.setPrefWidth(this.width * 0.1);
+                    dateTypeFields.getChildren().addAll(dateField, typeComboBox);
+                    dateType.getChildren().addAll(dateTypeLabels, dateTypeFields);
+                    //
+                    HBox depotRoute = new HBox(50);
+                    depotRoute.setAlignment(Pos.CENTER);
+
+                    VBox depotRouteLabels = new VBox(22);
+                    depotRouteLabels.getStyleClass().add("dataInfoType");
+                    Label depot = new Label("Depot:");
+                    depot.setPadding(new Insets(2,0,0,0));
+                    depot.setAlignment(Pos.CENTER);
+                    Label route = new Label("Route:");
+                    route.setAlignment(Pos.CENTER);
+                    depot.setMaxWidth(Double.MAX_VALUE);
+                    route.setMaxWidth(Double.MAX_VALUE);
+                    depotRouteLabels.getChildren().addAll(depot, route);
+
+                    VBox depotRouteFields = new VBox(10);
+                    TextField depotField = new TextField(vehicle.getDepotId() + "");
+                    TextField routeField = new TextField(vehicle.getRouteId() + "");
+                    depotRouteFields.getChildren().addAll(depotField, routeField);
+                    depotRoute.getChildren().addAll(depotRouteLabels, depotRouteFields);
+                    vehicleModifiableInfo.getChildren().addAll(idPlate, dateType, depotRoute);
+                    //
+                    Button save = new Button("Save ✔");
+                    save.setPrefHeight(this.height * 0.05);
+                    //save.setPrefWidth(this.width * 0.05);
+                    VBox.setMargin(save, new Insets(40,0,0,0));
+
+                    save.setOnMousePressed(mouseEvent -> {
+                        save.getStyleClass().add("pressed");
+                    });
+
+                    save.setOnMouseReleased(mouseEvent -> {
+                        save.getStyleClass().remove("pressed");
+                        String idText = idField.getText();
+                        String plateText = plateField.getText();
+                        LocalDate dateValue = dateField.getValue();
+                        String typeComboValue = typeComboBox.getValue();
+                        String depotIdValue = depotField.getText();
+                        String routeIdValue = routeField.getText();
+
+                        // Validation
+                        if(idText.matches(".*\\D.*")){
+                            Label errorMessage = new Label("The vehicle ID must contain digits only!");
+                            errorMessage.setStyle("-fx-text-fill: red;");
+                            errorMessage.setAlignment(Pos.CENTER);
+                            vehicleInfo.getChildren().clear();
+                            vehicleInfo.getChildren().addAll(vehicleImageView, vehicleModifiableInfo, save, errorMessage);
+                            idField.setStyle("-fx-background-color: #f78d8d;");
+                            idField.setText(vehicle.getId() + "");
+                            idField.requestFocus();
+                        }
+                        else if(plateText.length() > 11){
+                            Label errorMessage = new Label("The vehicle plate can be a maximum 11 characters long!");
+                            errorMessage.setStyle("-fx-text-fill: red;");
+                            errorMessage.setAlignment(Pos.CENTER);
+                            vehicleInfo.getChildren().clear();
+                            vehicleInfo.getChildren().addAll(vehicleImageView, vehicleModifiableInfo, save, errorMessage);
+                            plateField.setStyle("-fx-background-color: #f78d8d;");
+                            plateField.setText(vehicle.getPlate());
+                            plateField.requestFocus();
+                        }
+                        else if(depotIdValue.matches(".*\\D.*")){
+                            Label errorMessage = new Label("The depot ID must contain digits only!");
+                            errorMessage.setStyle("-fx-text-fill: red;");
+                            errorMessage.setAlignment(Pos.CENTER);
+                            vehicleInfo.getChildren().clear();
+                            vehicleInfo.getChildren().addAll(vehicleImageView, vehicleModifiableInfo, save, errorMessage);
+                            depotField.setStyle("-fx-background-color: #f78d8d;");
+                            depotField.setText(vehicle.getDepotId() + "");
+                            depotField.requestFocus();
+                        }
+                        else if(routeIdValue.matches(".*\\D.*")){
+                            Label errorMessage = new Label("The route ID must contain digits only!");
+                            errorMessage.setStyle("-fx-text-fill: red;");
+                            errorMessage.setAlignment(Pos.CENTER);
+                            vehicleInfo.getChildren().clear();
+                            vehicleInfo.getChildren().addAll(vehicleImageView, vehicleModifiableInfo, save, errorMessage);
+                            routeField.setStyle("-fx-background-color: #f78d8d;");
+                            routeField.setText(vehicle.getRouteId() + "");
+                            routeField.requestFocus();
+                        }
+                        // validation passed:
+                        else {
+                            try(Connection connection = ConnectionManager.getConnection()) {
+                                if(!routeIdValue.equals(vehicle.getRouteId() + "")){
+                                    PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set route_id = ? where id = ?");
+                                    preparedStatement.setLong(1, Long.parseLong(routeIdValue));
+                                    preparedStatement.setLong(2, vehicle.getId());
+                                    preparedStatement.executeUpdate();
+                                    preparedStatement.close();
+                                    routeField.setStyle("-fx-background-color: green;");
+                                }
+                                if(!depotIdValue.equals(vehicle.getDepotId() + "")){
+                                    PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set depot_id = ? where id = ?");
+                                    preparedStatement.setLong(1, Long.parseLong(depotIdValue));
+                                    preparedStatement.setLong(2, vehicle.getId());
+                                    preparedStatement.executeUpdate();
+                                    preparedStatement.close();
+                                    depotField.setStyle("-fx-background-color: green;");
+                                }
+                                if(!typeComboValue.equals(vehicle.getType()) && !typeComboValue.equals("NONE")){
+                                    PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set type = ? where id = ?");
+                                    preparedStatement.setString(1, typeComboValue);
+                                    preparedStatement.setLong(2, vehicle.getId());
+                                    preparedStatement.executeUpdate();
+                                    preparedStatement.close();
+                                    typeComboBox.setStyle("-fx-background-color: green; -fx-border-color: #2b8504;");
+                                }
+                                if(!dateValue.equals(Instant.ofEpochMilli(vehicle.getDateOfManufacture().getTime())
+                                        .atZone(ZoneId.systemDefault())
+                                        .toLocalDate())){
+                                    PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set date_of_manufacture = ? where id = ?");
+                                    preparedStatement.setDate(1, java.sql.Date.valueOf(dateValue));
+                                    preparedStatement.setLong(2, vehicle.getId());
+                                    preparedStatement.executeUpdate();
+                                    preparedStatement.close();
+                                    dateField.setStyle("-fx-background-color: green;");
+                                }
+                                if(!plateText.equals(vehicle.getPlate())){
+                                    PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set plate = ? where id = ?");
+                                    preparedStatement.setString(1, plateText);
+                                    preparedStatement.setLong(2, vehicle.getId());
+                                    preparedStatement.executeUpdate();
+                                    preparedStatement.close();
+                                    plateField.setStyle("-fx-background-color: green;");
+                                }
+                                if (!idText.equals(vehicle.getId() + "")) {
+                                    PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set id = ? where id = ?");
+                                    preparedStatement.setLong(1, Long.parseLong(idText));
+                                    preparedStatement.setLong(2, vehicle.getId());
+                                    preparedStatement.executeUpdate();
+                                    preparedStatement.close();
+                                    idField.setStyle("-fx-background-color: green;");
+                                }
+                            }
+                            catch (SQLException e){
+                                System.out.println("SQLException: (updateVehicleInfoButton)" + e);
+                            }
+                        }
+                    });
+
+                    //save.setPadding(new Insets(20,0,0,0));
+                    vehicleInfo.getChildren().addAll(vehicleImageView, vehicleModifiableInfo, save);
+                    vehicleInfo.setPadding(new Insets(-35, 0, 0, 0));
+                    vehicleInfo.setPrefWidth(this.width - menu.getWidth());
+                    vehicleInfo.setPrefHeight(this.height);
+                    vehicleInfo.setMaxWidth(this.width - menu.getWidth());
+                    vehicleInfo.setMaxHeight(this.height);
+                    this.root.setCenter(vehicleInfo);
                 }
                 else {
                     System.out.println(selectedItem.getValue());
