@@ -63,4 +63,18 @@ public class DepotsDAO {
         }
         return null;
     }
+
+    public static void deleteDepot(Long depotId){
+        try(Connection connection = ConnectionManager.getConnection()){
+            ScheduleDAO.deleteScheduleRecord(depotId);
+            VehiclesDAO.deleteVehiclesFromDepot(depotId);
+            PreparedStatement preparedStatement = connection.prepareStatement("delete depots where id = ?");
+            preparedStatement.setLong(1, depotId);
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        }
+        catch (SQLException e){
+            System.out.println("SQLException: (deleteDepot) " + e);
+        }
+    }
 }

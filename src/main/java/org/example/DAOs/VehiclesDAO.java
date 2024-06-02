@@ -61,4 +61,41 @@ public class VehiclesDAO {
         }
         return null;
     }
+
+    public static void deleteVehicle(String plate){
+        ScheduleDAO.deleteScheduleRecordByVehicle(plate);
+        try(Connection connection = ConnectionManager.getConnection()){
+            PreparedStatement preparedStatement = connection.prepareStatement("delete vehicles where plate = ?");
+            preparedStatement.setString(1, plate);
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        }
+        catch (SQLException e){
+            System.out.println("SQLException: (deleteVehicle) " + e);
+        }
+    }
+
+    public static void deleteVehiclesFromDepot(Long depotId){
+        try(Connection connection = ConnectionManager.getConnection()){
+            PreparedStatement preparedStatement = connection.prepareStatement("delete vehicles where depot_id = ?");
+            preparedStatement.setLong(1, depotId);
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        }
+        catch (SQLException e){
+            System.out.println("SQLException: (deleteVehiclesFromDepot) " + e);
+        }
+    }
+
+    public static void setRouteNull(Long routeId){
+        try(Connection connection = ConnectionManager.getConnection()){
+            PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set route_id = NULL where route_id = ?");
+            preparedStatement.setLong(1, routeId);
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        }
+        catch (SQLException e){
+            System.out.println("SQLException: (deleteVehiclesFromDepot) " + e);
+        }
+    }
 }

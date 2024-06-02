@@ -72,4 +72,28 @@ public class UsersDAO {
         }
         return -1;
     }
+
+    public static void deleteUser(Long userId){
+        try(Connection connection = ConnectionManager.getConnection()){
+            PreparedStatement preparedStatement = connection.prepareStatement("delete from users u where u.id = ?");
+            preparedStatement.setLong(1, userId);
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        }
+        catch (SQLException e){
+            System.out.println("SQLException: " + e);
+        }
+    }
+
+    public static void deleteUser(String username){
+        try(Connection connection = ConnectionManager.getConnection()){
+            PreparedStatement preparedStatement = connection.prepareStatement("delete from users u where u.username = ?");
+            preparedStatement.setString(1, username);
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        }
+        catch (SQLException e){
+            System.out.println("SQLException: " + e);
+        }
+    }
 }

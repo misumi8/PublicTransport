@@ -20,7 +20,7 @@ public class Main extends Application{
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         Scene scene = new Scene(new MainScene(screenBounds.getWidth(), screenBounds.getHeight()).getRoot());
         stage.setScene(scene);
-        stage.setTitle("Public Transport v0.7");
+        stage.setTitle("Public Transport v0.8");
         stage.setX(screenBounds.getMinX());
         stage.setY(screenBounds.getMinY());
         stage.setWidth(screenBounds.getWidth());

@@ -1,0 +1,27 @@
+.context-menu {
+    -fx-background-color: #e3e3e3;
+    -fx-border-color: #ccc;
+    -fx-border-color: linear-gradient(to bottom right, #c9c9c9, #adadad);
+    -fx-padding: 0;
+    -fx-border: 2px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+}
+
+.menu-item {
+    -fx-font-size: 14px;
+    -fx-text-fill: black;
+    -fx-padding: 6px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-pref-width: 148px;
+}
+
+.menu-item:focused {
+    -fx-background-color: linear-gradient(to bottom right, #5296d9, #3e8bd6);
+    -fx-font-size: 14px;
+}
+
+.menu-item:hover {
+    -fx-background-color: linear-gradient(to bottom right, #4c87c2, #3577b8);
+}
