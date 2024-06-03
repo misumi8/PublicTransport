@@ -98,4 +98,25 @@ public class VehiclesDAO {
             System.out.println("SQLException: (deleteVehiclesFromDepot) " + e);
         }
     }
+
+    public static void addNewCar(Vehicle vehicle){
+        try(Connection connection = ConnectionManager.getConnection()){
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into vehicles (plate,date_of_manufacture,depot_id,route_id,type) values (?,?,?,?,?)");
+            if(vehicle.getPlate() == null) preparedStatement.setNull(1, Types.VARCHAR);
+            else preparedStatement.setString(1, vehicle.getPlate());
+            if(vehicle.getDateOfManufacture() == null) preparedStatement.setNull(2, Types.DATE);
+            else preparedStatement.setDate(2, vehicle.getDateOfManufacture());
+            if(vehicle.getDepotId() == null) preparedStatement.setNull(3, Types.INTEGER);
+            else preparedStatement.setLong(3, vehicle.getDepotId());
+            if(vehicle.getRouteId() == null) preparedStatement.setNull(4, Types.INTEGER);
+            else preparedStatement.setLong(4, vehicle.getRouteId());
+            if(vehicle.getType() == null) preparedStatement.setNull(5, Types.VARCHAR);
+            else preparedStatement.setString(5, vehicle.getType());
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        }
+        catch (SQLException e){
+            System.out.println("SQLException: (deleteVehiclesFromDepot) " + e);
+        }
+    }
 }

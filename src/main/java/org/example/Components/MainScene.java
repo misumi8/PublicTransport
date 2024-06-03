@@ -2,7 +2,6 @@ package org.example.Components;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Worker;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -10,7 +9,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import org.example.ConnectionManager;
 import org.example.DAOs.*;
@@ -40,6 +38,13 @@ public class MainScene {
         this.root = new BorderPane();
         this.width = width;
         this.height = height;
+
+        Image logo = new Image("/icons/icon8-logo.png");
+        ImageView logoView = new ImageView(logo);
+        HBox logoBox = new HBox();
+        logoBox.getChildren().add(logoView);
+        HBox.setMargin(logoView, new Insets(70,0,0,-45));
+        this.root.setCenter(logoBox);
 
         // Some tests:
         /*List<User> userss = UsersDAO.getUsers();
@@ -148,6 +153,9 @@ public class MainScene {
             rootTreeNode.getChildren().add(userRoot);
         }
 
+        Set<String> vehicles = new HashSet<>();
+        Set<String> stations = new HashSet<>();
+
         ContextMenu userContextMenu = new ContextMenu();
         MenuItem removeUser = new MenuItem("Remove user");
         userContextMenu.getItems().addAll(removeUser);
@@ -183,8 +191,17 @@ public class MainScene {
         addVehicle.setOnAction(event -> {
             TreeItem<String> selectedItem = menuList.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
-                //displayVehicleInfo
-                //root.setcenter
+                VBox vehicleInfo = new VBox(10);
+                // add new empty car to db
+                VehiclesDAO.addNewCar(new Vehicle("NONE", null, null, null, ""));
+                Image vehicleIcon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icons/icons8-trolleybus-21.png")));
+                TreeItem<String> newVehicle = new TreeItem<String>("NONE", new ImageView(vehicleIcon));
+                //selectedItem.getParent().getChildren().add(newVehicle);
+                displayVehicleInfo(newVehicle, menu, vehicleInfo, vehicles);
+                vehicleInfo.setAlignment(Pos.TOP_CENTER);
+                vehicleInfo.getStylesheets().add("/styles/vehicleInfo.css");
+                vehicleInfo.getStyleClass().add("vehicleInfo");
+                this.root.setCenter(vehicleInfo);
             }
         });
         removeVehicle.setOnAction(event -> {
@@ -198,6 +215,14 @@ public class MainScene {
         MenuItem removeRoute = new MenuItem("Remove route");
         MenuItem addRoute = new MenuItem("Add route");
         routeContextMenu.getItems().addAll(addRoute, removeRoute);
+        addRoute.setOnAction(event -> {
+            TreeItem<String> selectedItem = menuList.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                Route route = new Route(0, 0, 0);
+                RoutesDAO.addRoute(route);
+                displayRouteInfo(route, new TreeItem<String>("Route: Null"), menu);
+            }
+        });
         removeRoute.setOnAction(event -> {
             TreeItem<String> selectedItem = menuList.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
@@ -215,8 +240,6 @@ public class MainScene {
             }
         });
 
-        Set<String> vehicles = new HashSet<>();
-        Set<String> stations = new HashSet<>();
         menuList.setOnMouseClicked(event -> {
             TreeItem<String> selectedItem = menuList.getSelectionModel().getSelectedItem();
             if(selectedItem != null && selectedItem.getValue() != null) {
@@ -361,24 +384,7 @@ public class MainScene {
                         vehicleInfo.getStyleClass().add("vehicleInfo");
                         this.root.setCenter(vehicleInfo);
                     } else if (selectedItem.getValue().startsWith("Route:")) {
-                        CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_NONE));
-                        WebView webView = new WebView();
-                        WebEngine webEngine = webView.getEngine();
-                        Map<Integer, String> routeStations = RoutesDAO.getStations(Long.parseLong(selectedItem.getValue().substring(7)));
-                        StringBuilder path = new StringBuilder();
-                        for (int i = 0; !routeStations.isEmpty(); ++i) {
-                            if (routeStations.containsKey(i)) {
-                                path.append(routeStations.get(i).replace(' ', '+')).append('/');
-                                routeStations.remove(i);
-                            }
-                        }
-                        String url = "https://www.google.com/maps/dir/" + path.toString();
-                        webEngine.load(url);
-                        webView.setPrefHeight(this.height);
-                        webView.setPrefWidth(this.width - menu.getWidth());
-                    /*ProgressIndicator progressIndicator = new ProgressIndicator();
-                    progressIndicator.setMaxSize(100, 100);*/
-                        this.root.setCenter(new StackPane(webView));
+                        displayRouteInfo(null, selectedItem, menu);
                     } else if (stations.contains(selectedItem.getValue())) {
                         CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_NONE));
                         WebView webView = new WebView();
@@ -453,19 +459,220 @@ public class MainScene {
         return userItem;
     }
 
-    public void displayVehicleInfo(TreeItem<String> selectedItem, BorderPane menu, VBox vehicleInfo, Set<String> vehicles){
-        Vehicle vehicle = VehiclesDAO.getVehicle(selectedItem.getValue());
-        Vehicle selectedVehicle = VehiclesDAO.getVehicle(selectedItem.getValue());
-        Image vehicleImg = null;
-        if (selectedVehicle.getType().isEmpty()) {
-            vehicleImg = new Image("/icons/unknownType.png");
-        } else if (selectedVehicle.getType().equals("BUS")) {
-            vehicleImg = new Image("/icons/bus.png");
-        } else if (selectedVehicle.getType().equals("TROLLEYBUS")) {
-            vehicleImg = new Image("/icons/trolleybus.png");
-        } else if (selectedVehicle.getType().equals("TRAM")) {
-            vehicleImg = new Image("/icons/tram.png");
+    public void displayRouteInfo(Route route, TreeItem<String> selectedItem, BorderPane menu){
+        Route selectedRoute = route == null ? RoutesDAO.getRoute(Long.parseLong(selectedItem.getValue().substring("Route: ".length()))) : route;
+        if(route != null && !route.isRouteIdPresent()) route.setId(RoutesDAO.getEmptyRouteId());
+        CookieHandler.setDefault(new CookieManager(null, CookiePolicy.ACCEPT_NONE));
+        WebView webView = new WebView();
+        WebEngine webEngine = webView.getEngine();
+        Map<Integer, String> routeStations = RoutesDAO.getStations(selectedItem.getValue().substring(7).toLowerCase().contains("null") ? RoutesDAO.getEmptyRouteId() : Long.parseLong(selectedItem.getValue().substring(7)));
+        StringBuilder path = new StringBuilder();
+        for (int i = 0; !routeStations.isEmpty(); ++i) {
+            if (routeStations.containsKey(i)) {
+                path.append(routeStations.get(i).replace(' ', '+')).append('/');
+                routeStations.remove(i);
+            }
         }
+        String url = "https://www.google.com/maps/dir/" + path.toString();
+        webEngine.load(url);
+        webView.setPrefHeight(this.height * 0.7);
+        webView.setMaxHeight(this.height * 0.7);
+        webView.setPrefWidth(this.width - menu.getWidth());
+        webView.getStylesheets().add("/styles/webView.css");
+
+        Label idLabel = new Label("ID:");
+        idLabel.setPadding(new Insets(2,0,0,0));
+        Label ticketPrice = new Label("Ticket price:");
+        VBox firstColLabels = new VBox(30);
+        firstColLabels.getChildren().addAll(idLabel, ticketPrice);
+        idLabel.setAlignment(Pos.CENTER);
+        ticketPrice.setAlignment(Pos.CENTER);
+        idLabel.setMaxWidth(Double.MAX_VALUE);
+        ticketPrice.setMaxWidth(Double.MAX_VALUE);
+
+
+        Label customers = new Label("Customers:");
+        Label expTime = new Label("Expected time:");
+        expTime.setPadding(new Insets(2,0,0,0));
+        VBox secondColLabels = new VBox(30);
+        secondColLabels.getChildren().addAll(expTime, customers);
+        customers.setAlignment(Pos.CENTER);
+        expTime.setAlignment(Pos.CENTER);
+        expTime.setMaxWidth(Double.MAX_VALUE);
+        customers.setMaxWidth(Double.MAX_VALUE);
+
+        TextField idField = new TextField(!selectedRoute.isRouteIdPresent() ? RoutesDAO.getEmptyRouteId() + "" : selectedRoute.getId() + "");
+        TextField ticketPriceField = new TextField(selectedRoute.getTicketPrice() + "");
+        VBox firstColFields = new VBox(20);
+        firstColFields.getChildren().addAll(idField, ticketPriceField);
+
+        TextField customersField = new TextField(selectedRoute.getCostumers() + "");
+        TextField expTimeField = new TextField(selectedRoute.getExpectedTime() + "");
+        VBox secondColFields = new VBox(20);
+        secondColFields.getChildren().addAll(expTimeField, customersField);
+
+        HBox firstColumn = new HBox(10);
+        firstColumn.getChildren().addAll(firstColLabels, firstColFields);
+        firstColumn.setAlignment(Pos.CENTER);
+
+        HBox secondColumn = new HBox(10);
+        secondColumn.getChildren().addAll(secondColLabels, secondColFields);
+        secondColumn.setAlignment(Pos.CENTER);
+
+        HBox routeTextInfo = new HBox(100);
+        routeTextInfo.getChildren().addAll(firstColumn, secondColumn);
+        routeTextInfo.setAlignment(Pos.CENTER);
+
+        Button saveButton = new Button("Save ✔");
+        saveButton.setAlignment(Pos.CENTER);
+
+        VBox routeInfoAndButton = new VBox(10);
+        VBox.setMargin(routeTextInfo, new Insets(-10,0,0,0));
+        VBox.setMargin(saveButton, new Insets(5,0,0,0));
+        saveButton.setOnMousePressed(mouseEvent -> {
+            saveButton.getStyleClass().add("pressed");
+        });
+        saveButton.setOnMouseReleased(mouseEvent -> {
+            saveButton.getStyleClass().remove("pressed");
+            String idStr = idField.getText();
+            String ticketPriceStr = ticketPriceField.getText();
+            String customersStr = customersField.getText();
+            String expTimeStr = expTimeField.getText();
+
+            // Validation
+            if (idStr.matches(".*\\D.*") || idStr.equals("0")) {
+                Label errorMessage = new Label("The route ID must contain digits only and be greater than 0!");
+                errorMessage.setStyle("-fx-text-fill: red;");
+                errorMessage.setAlignment(Pos.CENTER);
+                routeInfoAndButton.getChildren().clear();
+                routeInfoAndButton.getChildren().addAll(routeTextInfo, saveButton, errorMessage);
+                idField.setStyle("-fx-background-color: #f78d8d;");
+                idField.setText(selectedRoute.isRouteIdPresent() ? selectedRoute.getId() + "" : RoutesDAO.getEmptyRouteId() + "");
+                idField.requestFocus();
+            } else if (expTimeStr.matches(".*\\D.*") || expTimeStr.equals("0")){
+                Label errorMessage = new Label("The expected time field must contain digits only and be greater than 0!");
+                errorMessage.setStyle("-fx-text-fill: red;");
+                errorMessage.setAlignment(Pos.CENTER);
+                routeInfoAndButton.getChildren().clear();
+                routeInfoAndButton.getChildren().addAll(routeTextInfo, saveButton, errorMessage);
+                expTimeField.setStyle("-fx-background-color: #f78d8d;");
+                expTimeField.setText(selectedRoute.getExpectedTime() + "");
+                expTimeField.requestFocus();
+            } else if (ticketPriceStr.matches(".*\\D.*") || ticketPriceStr.equals("0")){
+                Label errorMessage = new Label("The ticket price field must contain digits only and be greater than 0!");
+                errorMessage.setStyle("-fx-text-fill: red;");
+                errorMessage.setAlignment(Pos.CENTER);
+                routeInfoAndButton.getChildren().clear();
+                routeInfoAndButton.getChildren().addAll(routeTextInfo, saveButton, errorMessage);
+                ticketPriceField.setStyle("-fx-background-color: #f78d8d;");
+                ticketPriceField.setText(selectedRoute.getTicketPrice() + "");
+                ticketPriceField.requestFocus();
+            } else if (customersStr.matches(".*\\D.*") || customersStr.equals("0")){
+                Label errorMessage = new Label("The customer field must contain digits only and be greater than 0!");
+                errorMessage.setStyle("-fx-text-fill: red;");
+                errorMessage.setAlignment(Pos.CENTER);
+                routeInfoAndButton.getChildren().clear();
+                routeInfoAndButton.getChildren().addAll(routeTextInfo, saveButton, errorMessage);
+                customersField.setStyle("-fx-background-color: #f78d8d;");
+                customersField.setText(selectedRoute.getCostumers() + "");
+                customersField.requestFocus();
+            } // Validation passed:
+            else {
+                try (Connection connection = ConnectionManager.getConnection()) {
+                    Label successMessage = new Label("Success:");
+                    successMessage.setStyle("-fx-text-fill: #099e02;");
+                    successMessage.setAlignment(Pos.CENTER);
+                    if (!idStr.equals(selectedRoute.getId() + "")) {
+                        System.out.println("Id mod");
+                        PreparedStatement preparedStatement = connection.prepareStatement("update routes set id = ? where id = ?");
+                        preparedStatement.setLong(1, Long.parseLong(idStr));
+                        preparedStatement.setLong(2, !selectedRoute.isRouteIdPresent() ? RoutesDAO.getEmptyRouteId() : selectedRoute.getId());
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
+                        if (successMessage.getText().equals("Success:"))
+                            successMessage.setText(successMessage.getText() + " Route ID");
+                        else successMessage.setText(successMessage.getText() + ", Route ID");
+                    }
+                    if (!customersStr.equals(selectedRoute.getCostumers() + "")) {
+                        PreparedStatement preparedStatement = connection.prepareStatement("update routes set customers = ? where id = ?");
+                        preparedStatement.setLong(1, Long.parseLong(customersStr));
+                        preparedStatement.setLong(2, !selectedRoute.isRouteIdPresent() ? RoutesDAO.getEmptyRouteId() : selectedRoute.getId());
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
+                        if (successMessage.getText().equals("Success:"))
+                            successMessage.setText(successMessage.getText() + " Customers");
+                        else successMessage.setText(successMessage.getText() + ", Customers");
+                    }
+                    if (!ticketPriceStr.equals(selectedRoute.getTicketPrice() + "")) {
+                        PreparedStatement preparedStatement = connection.prepareStatement("update routes set ticket_price = ? where id = ?");
+                        preparedStatement.setLong(1, Long.parseLong(ticketPriceStr));
+                        preparedStatement.setLong(2, !selectedRoute.isRouteIdPresent() ? RoutesDAO.getEmptyRouteId() : selectedRoute.getId());
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
+                        if (successMessage.getText().equals("Success:"))
+                            successMessage.setText(successMessage.getText() + " Ticket price");
+                        else successMessage.setText(successMessage.getText() + ", Ticket price");
+                    }
+                    if (!expTimeStr.equals(selectedRoute.getExpectedTime() + "")) {
+                        PreparedStatement preparedStatement = connection.prepareStatement("update routes set expected_time = ? where id = ?");
+                        preparedStatement.setLong(1, Long.parseLong(expTimeStr));
+                        preparedStatement.setLong(2, !selectedRoute.isRouteIdPresent() ? RoutesDAO.getEmptyRouteId() : selectedRoute.getId());
+                        preparedStatement.executeUpdate();
+                        preparedStatement.close();
+                        if (successMessage.getText().equals("Success:"))
+                            successMessage.setText(successMessage.getText() + " Expected time");
+                        else successMessage.setText(successMessage.getText() + ", Expected time");
+                    }
+                    if (!successMessage.getText().equals("Success:")) {
+                        routeInfoAndButton.getChildren().clear();
+                        routeInfoAndButton.getChildren().addAll(routeTextInfo, saveButton, successMessage);
+                    }
+                } catch (SQLException e) {
+                    System.out.println("SQLException: (updateRouteButton)" + e);
+                    if (e.getLocalizedMessage().startsWith("ORA-00001")) {
+                        Label errorMessage = new Label("Another route is using the same route identification number!");
+                        errorMessage.setStyle("-fx-text-fill: red;");
+                        errorMessage.setAlignment(Pos.CENTER);
+                        routeInfoAndButton.getChildren().clear();
+                        routeInfoAndButton.getChildren().addAll(routeTextInfo, saveButton, errorMessage);
+                    }
+                }
+            }
+        });
+        routeInfoAndButton.setPadding(new Insets(-15, 0,0,0));
+        routeInfoAndButton.setAlignment(Pos.CENTER);
+        routeInfoAndButton.setPrefHeight(this.height - webView.getHeight());
+        routeInfoAndButton.setPrefWidth(this.width - menu.getWidth());
+        routeInfoAndButton.getChildren().addAll(routeTextInfo, saveButton);
+        routeInfoAndButton.getStylesheets().add("/styles/routeInfo.css");
+        routeInfoAndButton.getStyleClass().add("routeInfo");
+
+        BorderPane routeInfo = new BorderPane();
+        routeInfo.setPrefHeight(this.height);
+        routeInfo.setPrefWidth(this.width - menu.getWidth());
+        routeInfo.setTop(webView);
+        routeInfo.setCenter(routeInfoAndButton);
+
+        this.root.setCenter(routeInfo);
+    }
+
+    public void displayVehicleInfo(TreeItem<String> selectedItem, BorderPane menu, VBox vehicleInfo, Set<String> vehicles){
+        //Vehicle vehicle = VehiclesDAO.getVehicle(selectedItem.getValue());
+        Vehicle selectedVehicle = VehiclesDAO.getVehicle(selectedItem.getValue());
+        //System.out.println("selectedItem.getValue: " + selectedItem.getValue() + " || " + selectedVehicle.getId());
+        Image vehicleImg = null;
+        if(selectedVehicle != null) {
+            if (selectedVehicle.getType().isEmpty()) {
+                vehicleImg = new Image("/icons/unknownType.png");
+            } else if (selectedVehicle.getType().equals("BUS")) {
+                vehicleImg = new Image("/icons/bus.png");
+            } else if (selectedVehicle.getType().equals("TROLLEYBUS")) {
+                vehicleImg = new Image("/icons/trolleybus.png");
+            } else if (selectedVehicle.getType().equals("TRAM")) {
+                vehicleImg = new Image("/icons/tram.png");
+            }
+        }
+        else vehicleImg = new Image("/icons/unknownType.png");
         ImageView vehicleImageView = new ImageView(vehicleImg);
         vehicleImageView.setFitHeight((this.width - menu.getWidth()) * 0.45);
         vehicleImageView.setFitWidth((this.width - menu.getWidth()) * 0.85);
@@ -490,7 +697,7 @@ public class MainScene {
         idPlateLabels.getChildren().addAll(id, plate);
 
         VBox idPlateFields = new VBox(10);
-        TextField idField = new TextField(vehicle.getId() + "");
+        TextField idField = new TextField(selectedVehicle != null ? selectedVehicle.getId() + "" : "");
         TextField plateField = new TextField(selectedItem.getValue());
         idPlateFields.getChildren().addAll(idField, plateField);
         idPlate.getChildren().addAll(idPlateLabels, idPlateFields);
@@ -512,12 +719,12 @@ public class MainScene {
         VBox dateTypeFields = new VBox(10);
         DatePicker dateField = new DatePicker();
         // convert Date to LocalDate:
-        dateField.setValue(Instant.ofEpochMilli(vehicle.getDateOfManufacture().getTime())
+        dateField.setValue(!selectedVehicle.vehicleHasNullValue() ? Instant.ofEpochMilli(selectedVehicle.getDateOfManufacture().getTime())
                 .atZone(ZoneId.systemDefault())
-                .toLocalDate());
+                .toLocalDate() : LocalDate.of(2000, 1, 1));
         ComboBox<String> typeComboBox = new ComboBox<>();
         typeComboBox.getItems().addAll("TROLLEYBUS", "TRAM", "BUS");
-        typeComboBox.setValue(vehicle.getType().isEmpty() ? "NONE" : vehicle.getType());
+        typeComboBox.setValue(selectedVehicle.getType());
         dateField.setPrefWidth(this.width * 0.1);
         typeComboBox.setPrefWidth(this.width * 0.1);
         dateTypeFields.getChildren().addAll(dateField, typeComboBox);
@@ -538,8 +745,8 @@ public class MainScene {
         depotRouteLabels.getChildren().addAll(depot, route);
 
         VBox depotRouteFields = new VBox(10);
-        TextField depotField = new TextField(vehicle.getDepotId() + "");
-        TextField routeField = new TextField(vehicle.getRouteId() + "");
+        TextField depotField = new TextField(selectedVehicle != null ? selectedVehicle.getDepotId() + "" : "");
+        TextField routeField = new TextField(selectedVehicle != null ? selectedVehicle.getRouteId() + "" : "");
         depotRouteFields.getChildren().addAll(depotField, routeField);
         depotRoute.getChildren().addAll(depotRouteLabels, depotRouteFields);
         vehicleModifiableInfo.getChildren().addAll(idPlate, dateType, depotRoute);
@@ -570,7 +777,7 @@ public class MainScene {
                 vehicleInfo.getChildren().clear();
                 vehicleInfo.getChildren().addAll(vehicleImageView, vehicleModifiableInfo, save, errorMessage);
                 idField.setStyle("-fx-background-color: #f78d8d;");
-                idField.setText(vehicle.getId() + "");
+                idField.setText(selectedVehicle != null ? selectedVehicle.getId() + "" : "");
                 idField.requestFocus();
             } else if (plateText.length() > 11) {
                 Label errorMessage = new Label("The vehicle plate can be a maximum 11 characters long!");
@@ -579,7 +786,16 @@ public class MainScene {
                 vehicleInfo.getChildren().clear();
                 vehicleInfo.getChildren().addAll(vehicleImageView, vehicleModifiableInfo, save, errorMessage);
                 plateField.setStyle("-fx-background-color: #f78d8d;");
-                plateField.setText(vehicle.getPlate());
+                plateField.setText(!selectedVehicle.vehicleHasNullValue() ? selectedVehicle.getPlate() : "");
+                plateField.requestFocus();
+            } else if (plateText.toCharArray()[2] != ' ' || plateText.toCharArray()[5] != ' '){
+                Label errorMessage = new Label("The vehicle plate should be in the format \"XX XX XXX\"");
+                errorMessage.setStyle("-fx-text-fill: red;");
+                errorMessage.setAlignment(Pos.CENTER);
+                vehicleInfo.getChildren().clear();
+                vehicleInfo.getChildren().addAll(vehicleImageView, vehicleModifiableInfo, save, errorMessage);
+                plateField.setStyle("-fx-background-color: #f78d8d;");
+                plateField.setText(!selectedVehicle.vehicleHasNullValue() ? selectedVehicle.getPlate() : "");
                 plateField.requestFocus();
             } else if (depotIdValue.matches(".*\\D.*")) {
                 Label errorMessage = new Label("The depot ID must contain digits only!");
@@ -588,7 +804,7 @@ public class MainScene {
                 vehicleInfo.getChildren().clear();
                 vehicleInfo.getChildren().addAll(vehicleImageView, vehicleModifiableInfo, save, errorMessage);
                 depotField.setStyle("-fx-background-color: #f78d8d;");
-                depotField.setText(vehicle.getDepotId() + "");
+                depotField.setText(!selectedVehicle.vehicleHasNullValue() ? selectedVehicle.getDepotId() + "" : "");
                 depotField.requestFocus();
             } else if (routeIdValue.matches(".*\\D.*")) {
                 Label errorMessage = new Label("The route ID must contain digits only!");
@@ -597,7 +813,7 @@ public class MainScene {
                 vehicleInfo.getChildren().clear();
                 vehicleInfo.getChildren().addAll(vehicleImageView, vehicleModifiableInfo, save, errorMessage);
                 routeField.setStyle("-fx-background-color: #f78d8d;");
-                routeField.setText(vehicle.getRouteId() + "");
+                routeField.setText(!selectedVehicle.vehicleHasNullValue() ? selectedVehicle.getRouteId() + "" : "");
                 routeField.requestFocus();
             }
             // validation passed:
@@ -606,52 +822,52 @@ public class MainScene {
                     Label successMessage = new Label("Success:");
                     successMessage.setStyle("-fx-text-fill: #099e02;");
                     successMessage.setAlignment(Pos.CENTER);
-                    if (!routeIdValue.equals(vehicle.getRouteId() + "")) {
+                    if (!routeIdValue.equals(!selectedVehicle.vehicleHasNullValue() ? selectedVehicle.getRouteId() + "" : "")) {
                         PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set route_id = ? where id = ?");
                         preparedStatement.setLong(1, Long.parseLong(routeIdValue));
-                        preparedStatement.setLong(2, vehicle.getId());
+                        preparedStatement.setLong(2, selectedVehicle.getId());
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
                         if (successMessage.getText().equals("Success:"))
                             successMessage.setText(successMessage.getText() + " Route ID");
                         else successMessage.setText(successMessage.getText() + ", Route ID");
                     }
-                    if (!depotIdValue.equals(vehicle.getDepotId() + "")) {
+                    if (!depotIdValue.equals(!selectedVehicle.vehicleHasNullValue() ? selectedVehicle.getDepotId() + "" : "")) {
                         PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set depot_id = ? where id = ?");
                         preparedStatement.setLong(1, Long.parseLong(depotIdValue));
-                        preparedStatement.setLong(2, vehicle.getId());
+                        preparedStatement.setLong(2, selectedVehicle.getId());
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
                         if (successMessage.getText().equals("Success:"))
                             successMessage.setText(successMessage.getText() + " Depot ID");
                         else successMessage.setText(successMessage.getText() + ", Depot ID");
                     }
-                    if (!typeComboValue.equals(vehicle.getType()) && !typeComboValue.equals("NONE")) {
+                    if (!typeComboValue.equals(!selectedVehicle.vehicleHasNullValue() ? selectedVehicle.getType() : "") && !typeComboValue.equals("NONE")) {
                         PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set type = ? where id = ?");
                         preparedStatement.setString(1, typeComboValue);
-                        preparedStatement.setLong(2, vehicle.getId());
+                        preparedStatement.setLong(2, selectedVehicle.getId());
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
                         if (successMessage.getText().equals("Success:"))
                             successMessage.setText(successMessage.getText() + " Type");
                         else successMessage.setText(successMessage.getText() + ", Type");
                     }
-                    if (!dateValue.equals(Instant.ofEpochMilli(vehicle.getDateOfManufacture().getTime())
+                    if (!dateValue.equals(!selectedVehicle.vehicleHasNullValue() ? Instant.ofEpochMilli(selectedVehicle.getDateOfManufacture().getTime())
                             .atZone(ZoneId.systemDefault())
-                            .toLocalDate())) {
+                            .toLocalDate() : LocalDate.of(2000,1,1))) {
                         PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set date_of_manufacture = ? where id = ?");
                         preparedStatement.setDate(1, java.sql.Date.valueOf(dateValue));
-                        preparedStatement.setLong(2, vehicle.getId());
+                        preparedStatement.setLong(2, selectedVehicle.getId());
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
                         if (successMessage.getText().equals("Success:"))
                             successMessage.setText(successMessage.getText() + " Date of manufacture");
                         else successMessage.setText(successMessage.getText() + ", Date of manufacture");
                     }
-                    if (!plateText.equals(vehicle.getPlate())) {
+                    if (!plateText.equals(!selectedVehicle.vehicleHasNullValue() ? selectedVehicle.getPlate() : "")) {
                         PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set plate = ? where id = ?");
                         preparedStatement.setString(1, plateText);
-                        preparedStatement.setLong(2, vehicle.getId());
+                        preparedStatement.setLong(2, selectedVehicle.getId());
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
                         vehicles.remove(selectedItem.getValue());
@@ -661,10 +877,10 @@ public class MainScene {
                             successMessage.setText(successMessage.getText() + " Plate");
                         else successMessage.setText(successMessage.getText() + ", Plate");
                     }
-                    if (!idText.equals(vehicle.getId() + "")) {
+                    if (!idText.equals(!selectedVehicle.vehicleHasNullValue() ? selectedVehicle.getId() + "" : "")) {
                         PreparedStatement preparedStatement = connection.prepareStatement("update vehicles set id = ? where id = ?");
                         preparedStatement.setLong(1, Long.parseLong(idText));
-                        preparedStatement.setLong(2, vehicle.getId());
+                        preparedStatement.setLong(2, selectedVehicle.getId());
                         preparedStatement.executeUpdate();
                         preparedStatement.close();
                         if (successMessage.getText().equals("Success:"))

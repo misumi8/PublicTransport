@@ -1,6 +1,6 @@
 package org.example.Entities;
 
-import java.util.Date;
+import java.sql.Date;
 
 public class Vehicle {
     private Long id;
@@ -12,7 +12,7 @@ public class Vehicle {
 
     public Vehicle(Long id, String plate, Date dateOfManufacture, Long depotId, Long routeId, String type) {
         this.id = id;
-        this.plate = plate;
+        this.plate = plate != null ? plate : "";
         this.dateOfManufacture = dateOfManufacture;
         this.depotId = depotId;
         this.routeId = routeId;
@@ -27,14 +27,18 @@ public class Vehicle {
         this.routeId = routeId;
     }
 
-    public Vehicle(String plate, Date dateOfManufacture, Long depotId, Long routeId) {
+    public Vehicle(String plate, Date dateOfManufacture, Long depotId, Long routeId, String type) {
         this.plate = plate;
         this.dateOfManufacture = dateOfManufacture;
         this.depotId = depotId;
         this.routeId = routeId;
     }
 
-    public Vehicle() {}
+    public Vehicle() {
+        this.type = "";
+        this.plate = "";
+
+    }
 
     public String getType() {
         return type;
@@ -82,6 +86,14 @@ public class Vehicle {
 
     public void setRouteId(Long routeId) {
         this.routeId = routeId;
+    }
+
+    public boolean vehicleHasNullValue(){
+        return this.plate == null ||
+                this.id == null ||
+                this.depotId == null ||
+                this.routeId == null ||
+                this.dateOfManufacture == null;
     }
 
     @Override

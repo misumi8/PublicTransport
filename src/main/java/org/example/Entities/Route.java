@@ -53,6 +53,11 @@ public class Route {
         this.expectedTime = expectedTime;
     }
 
+    public boolean isRouteIdPresent(){
+        //System.out.println("isRouteIdPresent: " + this.id);
+        return this.id != null;
+    }
+
     @Override
     public String toString() {
         return "Route{" +

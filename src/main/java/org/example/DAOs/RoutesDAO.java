@@ -56,6 +56,41 @@ public class RoutesDAO {
         return routes;
     }
 
+    public static Route getRoute(Long routeId){
+        try(Connection connection = ConnectionManager.getConnection()){
+            PreparedStatement preparedStatement = connection.prepareStatement("select * from routes where id = ?");
+            preparedStatement.setLong(1, routeId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if(resultSet.next()){
+                return new Route(
+                        resultSet.getLong("id"),
+                        resultSet.getInt("ticket_price"),
+                        resultSet.getInt("customers"),
+                        resultSet.getInt("expected_time")
+                );
+            }
+            preparedStatement.close();
+        }
+        catch (SQLException e){
+            System.out.println("SQLException: (getRoute) " + e);
+        }
+        return null;
+    }
+
+    public static void addRoute(Route route){
+        try(Connection connection = ConnectionManager.getConnection()){
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into routes(customers, ticket_price, expected_time) values (?,?,?)");
+            preparedStatement.setInt(1, route.getCostumers());
+            preparedStatement.setInt(2, route.getTicketPrice());
+            preparedStatement.setInt(3, route.getExpectedTime());
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        }
+        catch (SQLException e){
+            System.out.println("SQLException: (addRoute) " + e);
+        }
+    }
+
     public static void deleteRoute(Long routeId){
         VehiclesDAO.setRouteNull(routeId);
         StationsDAO.deleteStationByRouteId(routeId);
@@ -68,5 +103,17 @@ public class RoutesDAO {
         catch (SQLException e){
             System.out.println("SQLException: (deleteVehiclesFromDepot) " + e);
         }
+    }
+
+    public static Long getEmptyRouteId(){
+        try(Connection connection = ConnectionManager.getConnection();
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select id from routes where expected_time = 0 and customers = 0 and ticket_price = 0");){
+            if(resultSet.next()) return resultSet.getLong("id");
+        }
+        catch (SQLException e){
+            System.out.println("SQLException: (deleteVehiclesFromDepot) " + e);
+        }
+        return -1L;
     }
 }

@@ -1,0 +1,21 @@
+.button {
+    -fx-background-color: linear-gradient(to right, #4c87ed, #3978e6);
+    -fx-font-size: 1.5em;
+    -fx-font-weight: 800;
+    -fx-text-fill: linear-gradient(to right, #e6e6e6, #f2f2f2);
+    /*-fx-font-style: italic;*/
+    -fx-border-color: linear-gradient(to bottom right, #1a7edb, #1672c7);
+    -fx-border: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+}
+
+.button.pressed {
+    -fx-background-color: linear-gradient(to right, #4181f0, #2469e0);
+}
+
+.routeInfo {
+    -fx-border-color: linear-gradient(to bottom right, #1672c7, #2f92ed);
+    -fx-padding: 0;
+    -fx-border-width: 3px 0 0 0;
+}
